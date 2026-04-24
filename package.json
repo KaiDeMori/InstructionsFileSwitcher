@@ -1,0 +1,364 @@
+{
+  "name": "ifs",
+  "displayName": "Instruction Files Switcher",
+  "publisher": "kaidemori",
+  "author": {
+    "name": "Kai De–Mori",
+    "email": "Kai.De.Mori@peopleoftheprompt.org",
+    "url": "https://peopleoftheprompt.org/"
+  },
+  "description": "One-Click instruction files toggling",
+  "version": "0.0.5",
+  "icon": "resources/ifs-icon_png.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KaiDeMori/InstructionsFileSwitcher.git"
+  },
+  "engines": {
+    "vscode": "^1.116.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ifs.setUserPath",
+        "title": "IFS: Set User Path",
+        "category": "IFS"
+      },
+      {
+        "command": "ifs.manageProfiles",
+        "title": "IFS: Profiles",
+        "category": "IFS",
+        "icon": {
+          "light": "resources/ifs-icon.svg",
+          "dark": "resources/ifs-icon.svg"
+        }
+      },
+      {
+        "command": "ifs.renameInstructionFile",
+        "title": "Rename",
+        "category": "IFS",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "ifs.openInstructionFile",
+        "title": "Open",
+        "category": "IFS",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "ifs.openConfig",
+        "title": "Open Config",
+        "category": "IFS"
+      },
+      {
+        "command": "ifs.openPathInExplorer",
+        "title": "Open Folder in Explorer",
+        "category": "IFS",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "ifs.refreshTree",
+        "title": "Refresh",
+        "category": "IFS",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "ifs.resetSettings",
+        "title": "IFS: Reset…",
+        "category": "IFS"
+      },
+      {
+        "command": "ifs.setWorkspacePath",
+        "title": "IFS: Set Workspace Path",
+        "category": "IFS",
+        "when": "false"
+      },
+      {
+        "command": "ifs.manageWorkspaceProfiles",
+        "title": "IFS: Workspace Profiles",
+        "category": "IFS",
+        "icon": {
+          "light": "resources/ifs-icon.svg",
+          "dark": "resources/ifs-icon.svg"
+        }
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "ifs.refreshTree",
+          "when": "view == ifsTreeView || view =~ /^ifsWorkspaceTreeView\\d+$/",
+          "group": "navigation"
+        },
+        {
+          "command": "ifs.manageProfiles",
+          "when": "view == ifsTreeView",
+          "group": "navigation"
+        },
+        {
+          "command": "ifs.manageWorkspaceProfiles",
+          "when": "view =~ /^ifsWorkspaceTreeView\\d+$/",
+          "group": "navigation"
+        },
+        {
+          "command": "ifs.openConfig",
+          "when": "view == ifsTreeView || view =~ /^ifsWorkspaceTreeView\\d+$/"
+        },
+        {
+          "command": "ifs.resetSettings",
+          "when": "view == ifsTreeView || view =~ /^ifsWorkspaceTreeView\\d+$/"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "ifs.openPathInExplorer",
+          "when": "(view == ifsTreeView || view =~ /^ifsWorkspaceTreeView\\d+$/) && (viewItem == ifsRoot || viewItem == ifsFolder)",
+          "group": "inline"
+        },
+        {
+          "command": "ifs.openInstructionFile",
+          "when": "(view == ifsTreeView || view =~ /^ifsWorkspaceTreeView\\d+$/) && viewItem == ifsFile",
+          "group": "inline"
+        },
+        {
+          "command": "ifs.renameInstructionFile",
+          "when": "(view == ifsTreeView || view =~ /^ifsWorkspaceTreeView\\d+$/) && viewItem == ifsFile",
+          "group": "inline"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "IFS",
+      "properties": {
+        "ifs.paths.user": {
+          "type": "string",
+          "default": "",
+          "scope": "application",
+          "description": "Primary instruction folder shown in the IFS User tree. Stored at the User (Global) scope."
+        },
+        "ifs.paths.additional": {
+          "type": "array",
+          "default": [],
+          "scope": "application",
+          "description": "Additional instruction folders shown in IFS Workspace trees (one tree per path). Stored at the User (Global) scope.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ifs.additionalPaths": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0,
+          "maximum": 10,
+          "scope": "application",
+          "description": "Number of spare manual workspace path slots shown in addition to auto-discovered and configured paths."
+        },
+        "ifs.notifications.hideAll": {
+          "type": "boolean",
+          "default": false,
+          "scope": "application",
+          "description": "Hide all IFS notification popups (info + warnings). Errors and confirmation dialogs are always shown."
+        },
+        "ifs.logging.enabled": {
+          "type": "boolean",
+          "default": false,
+          "scope": "application",
+          "description": "Write IFS log messages to the \"IFS\" Output channel. The channel is auto-revealed when an error is logged."
+        },
+        "ifs.profiles.user": {
+          "type": "array",
+          "default": [],
+          "scope": "application",
+          "description": "Saved profiles for the IFS User tree. Stored at the User (Global) scope.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Unique profile identifier and display name"
+              },
+              "active_ifs": {
+                "type": "array",
+                "description": "Activated instruction file entries (full path + basename)",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "absolute_path": {
+                      "type": "string",
+                      "description": "Full filesystem path to the instruction file (active extension)"
+                    },
+                    "basename": {
+                      "type": "string",
+                      "description": "Instruction file basename without extension (display name)"
+                    }
+                  },
+                  "required": [
+                    "absolute_path",
+                    "basename"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "active_ifs"
+            ]
+          }
+        },
+        "ifs.profiles.additional": {
+          "type": "array",
+          "default": [],
+          "scope": "application",
+          "description": "Saved profiles for the IFS Workspace trees. Stored at the User (Global) scope.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Unique profile identifier and display name"
+              },
+              "active_ifs": {
+                "type": "array",
+                "description": "Activated instruction file entries (full path + basename)",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "absolute_path": {
+                      "type": "string",
+                      "description": "Full filesystem path to the instruction file (active extension)"
+                    },
+                    "basename": {
+                      "type": "string",
+                      "description": "Instruction file basename without extension (display name)"
+                    }
+                  },
+                  "required": [
+                    "absolute_path",
+                    "basename"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "name",
+              "active_ifs"
+            ]
+          }
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ifsViewContainer",
+          "title": "IFS",
+          "icon": "resources/ifs-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "ifsViewContainer": [
+        {
+          "id": "ifsTreeView",
+          "name": "IFS User",
+          "icon": "resources/ifs-icon.svg"
+        },
+        {
+          "id": "ifsWorkspaceTreeView0",
+          "name": "IFS Workspace 1",
+          "icon": "resources/ifs-icon.svg",
+          "when": "ifs.workspaceViewCount > 0",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "ifsWorkspaceTreeView1",
+          "name": "IFS Workspace 2",
+          "icon": "resources/ifs-icon.svg",
+          "when": "ifs.workspaceViewCount > 1",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "ifsWorkspaceTreeView2",
+          "name": "IFS Workspace 3",
+          "icon": "resources/ifs-icon.svg",
+          "when": "ifs.workspaceViewCount > 2",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "ifsWorkspaceTreeView3",
+          "name": "IFS Workspace 4",
+          "icon": "resources/ifs-icon.svg",
+          "when": "ifs.workspaceViewCount > 3",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "ifsWorkspaceTreeView4",
+          "name": "IFS Workspace 5",
+          "icon": "resources/ifs-icon.svg",
+          "when": "ifs.workspaceViewCount > 4",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "ifsWorkspaceTreeView5",
+          "name": "IFS Workspace 6",
+          "icon": "resources/ifs-icon.svg",
+          "when": "ifs.workspaceViewCount > 5",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "ifsWorkspaceTreeView6",
+          "name": "IFS Workspace 7",
+          "icon": "resources/ifs-icon.svg",
+          "when": "ifs.workspaceViewCount > 6",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "ifsWorkspaceTreeView7",
+          "name": "IFS Workspace 8",
+          "icon": "resources/ifs-icon.svg",
+          "when": "ifs.workspaceViewCount > 7",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "ifsWorkspaceTreeView8",
+          "name": "IFS Workspace 9",
+          "icon": "resources/ifs-icon.svg",
+          "when": "ifs.workspaceViewCount > 8",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "ifsWorkspaceTreeView9",
+          "name": "IFS Workspace 10",
+          "icon": "resources/ifs-icon.svg",
+          "when": "ifs.workspaceViewCount > 9",
+          "visibility": "collapsed"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.116.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "typescript-eslint": "^8.56.1",
+    "eslint": "^9.39.3",
+    "typescript": "^5.9.3",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}

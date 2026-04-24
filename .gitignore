@@ -1,0 +1,38 @@
+# Node.js dependencies
+node_modules/
+
+# Compiled output
+out/
+publish/
+
+# VS Code settings and workspace files
+.vscode/
+
+.github/instructions/
+
+# Test and build artifacts
+.vscode-test.mjs
+.nyc_output/
+coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+
+# Editor temp files
+*.swp
+*.swo
+*.tmp
+
+**/art/
+docs/
