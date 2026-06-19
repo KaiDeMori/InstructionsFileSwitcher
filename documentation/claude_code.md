@@ -79,4 +79,3 @@ This is a bridge, not a perfect re-implementation of Copilot's behavior. Know th
 1. Manage your instruction files in the IFS sidebar exactly as you do for Copilot.
 2. Check the files you want Claude Code to see; uncheck the rest (or switch a profile).
 3. Start a fresh Claude Code session (or `/clear` an existing one). The active files are injected automatically.
-4. Verify by looking at the session start — you will see each file printed under its `<<< INSTRUCTION FILE: … >>>` header.
