@@ -158,6 +158,14 @@ If your settings get into a weird state, run **IFS: Reset…** from the Command 
 
 IFS knows the conventional VS Code prompt-folder locations for Windows, macOS, and Linux, plus the Insiders variants on each. It also handles paths written with `~` (home directory) or relative to the workspace.
 
+## Using IFS with Claude Code (and other tools)
+
+IFS isn't really Copilot-specific. It's a switch over files on disk: an active file ends in `.instructions.md`, a deactivated one ends in `.instructions.IFS_DEACTIVATED.md`. Any tool that can read those files can ride on the same checkboxes.
+
+GitHub Copilot discovers `.instructions.md` files on its own. **Claude Code** doesn't — but a small `SessionStart` hook can read every *active* `.instructions.md` file and inject it into the chat at session start. Because deactivated files are renamed away from the `.instructions.md` suffix, the hook's glob skips them automatically, so the same IFS checkbox drives both tools.
+
+See [documentation/claude_code.md](documentation/claude_code.md) for the hook itself, setup steps, the Windows (Git Bash) path note, and the honest caveats — e.g. `applyTo` is ignored, and changes apply on the next session or `/clear`, not live.
+
 ---
 
 > Know thy context window. Then check a box.

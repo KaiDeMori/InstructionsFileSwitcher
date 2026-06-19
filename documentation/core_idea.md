@@ -25,3 +25,7 @@ If more than one User-level folder is found, IFS asks you to pick one as the pri
 # Why the tree has multiple views
 
 Because instruction files can live in several "scopes" at once — your personal user prompts, an Insiders install, a workspace-relative `.github/instructions` folder, and so on. Each scope gets its own tree so you can switch them independently without confusing yourself about which file ended up where.
+
+# IFS is not Copilot-specific
+
+Nothing about the rename trick is tied to Copilot. An active file is just a file ending in `.instructions.md`; a deactivated one isn't. Any tool that reads those files can ride on the same checkboxes. For example, Claude Code can pick up your active files through a small session hook — see [claude_code.md](claude_code.md).
