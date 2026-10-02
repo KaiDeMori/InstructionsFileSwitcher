@@ -89,7 +89,7 @@ Claude Code caches your prompt so that follow-up requests are faster and cheaper
 IFS adds a status bar item at the bottom of the VS Code window that switches the TTL with one click:
 
 - **`Cache: 5m`** → IFS has set the TTL to 5 minutes.
-- **`Cache: *60m`** → IFS has set nothing, so Claude Code uses its default. As of October 2026, that default is 60 minutes with a subscription within your plan usage. The asterisk marks the small print: with usage credits, an API key or a cloud provider, the default is 5 minutes. The tooltip says so too.
+- **`Cache: *60m`** → IFS has set nothing, so Claude Code uses its default. With a subscription within your plan usage, that default is 60 minutes. The asterisk marks the small print: with usage credits, an API key or a cloud provider, the default is 5 minutes. The tooltip says so too.
 
 The item only appears while the Claude Code extension is installed and enabled. Switching the TTL requires Claude Code 2.1.242 or later.
 
