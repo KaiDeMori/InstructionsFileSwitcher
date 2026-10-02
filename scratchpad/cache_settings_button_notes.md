@@ -1,8 +1,8 @@
 # Cache TTL Button: Notes
 
-Date: 2026-10-01
-
 Goal: a button in our custom VS Code extension that switches the prompt cache TTL of Claude Code between `5m` and `1h`.
+
+Status: implemented in IFS and tested. See chapter 7.
 
 ## 1. Recommendation
 
@@ -23,20 +23,23 @@ The settings approach needs file I/O, JSON parsing and merging.
 ## 2. Trade-offs
 
 - **Scope:** the env var only affects the VS Code extension, not the CLI in a terminal. If the button must control both, use `promptCacheTtl` in `~/.claude/settings.json` instead.
-- **Timing:** both approaches probably only take effect for new sessions. The env var is read when the Claude process starts.
+- **Timing:** both approaches probably only take effect for new sessions. The env var is read when the Claude process starts. Verified for the env var: new sessions and forks pick up the change, and a running session keeps its TTL. No window reload is needed.
 - **Displayed state:** the button can show what it set, not the effective TTL. A control with higher precedence can still override it. The effective TTL is shown by `/usage`.
 
-## 3. To verify before implementing
+## 3. Verification
 
-The recommendation is based on memory, not on research. These details are unverified:
+The recommendation was based on memory, not on research. These details were verified against the `package.json` of the installed Claude Code extension (2.1.287):
 
-- **Setting ID:** probably `claudeCode.environmentVariables`. Check the name in the Settings UI.
-- **Value shape:** probably an array of `{ "name": ..., "value": ... }` objects. Merge our entry into it; never replace the whole array.
+- **Setting ID ✓** `claudeCode.environmentVariables`.
+- **Value shape ✓** an array of `{ "name": ..., "value": ... }` objects. Both fields are required strings, and the default is `[]`. Merge our entry into it; never replace the whole array.
+- **Scope ✓** `machine`. The setting can only be set in user (or remote) settings, never per workspace.
+- **Version ✓** 2.1.287 is installed; the controls require 2.1.242 or later.
+- **Note:** the setting's description says "Prefer setting environment variables in Claude's settings.json." This does not change the recommendation.
 - **Reset:** to return to the default, remove the entry instead of writing `1h`. Writing `1h` would also pin `1h` after the subscription switches to usage credits.
 
 ## 4. Background: TTL controls in Claude Code
 
-Researched on 2026-10-01 from the official docs (see chapter 6).
+Researched from the official docs (see chapter 6).
 
 ### 4.1 Values
 
@@ -77,7 +80,7 @@ First match wins:
 ### 4.5 Checking the effective TTL
 
 - **`/usage`:** the `Prompt cache (main)` line shows the TTL in effect.
-- **VS Code cache clock:** if it counts down from more than 5 minutes, `1h` is in effect.
+- **VS Code cache clock:** if it counts down from more than 5 minutes, `1h` is in effect. Observed: the cache clock in the Claude Code panel shows `5m` or `60m`.
 
 ## 5. Alternative: `promptCacheTtl` in `~/.claude/settings.json`
 
@@ -94,3 +97,27 @@ In that case:
 - [Settings reference](https://code.claude.com/docs/en/settings-reference)
 - [Environment variables](https://code.claude.com/docs/en/env-vars)
 - [VS Code extension](https://code.claude.com/docs/en/vs-code)
+
+## 7. Implementation
+
+Terminology: the "button" in this document is the **prompt cache TTL status bar item**.
+
+### 7.1 What was built
+
+- **File:** `src/prompt_cache_TTL_status_bar_item.ts`. `activate()` calls `create_prompt_cache_TTL_status_bar_item()` right after `IFS_notifier.initialize()`, so the item never waits for the tree setup.
+- **Command:** `ifs.toggle_prompt_cache_TTL`. It is not contributed in `package.json`.
+- **Labels:** `Cache: 5m` while our entry is set, `Cache: *60m` while it is not. The asterisk marks the small print, which the tooltip explains: `60m` is the default only within plan usage.
+- **Toggle:** adds our entry with `5m`, or removes it. All other entries stay untouched. When no entries are left, the key is removed.
+- **Reading:** `inspect(...).globalValue` only, because the toggle writes to the User (Global) scope.
+- **Visibility:** only while the extension `anthropic.claude-code` is installed and enabled. The item follows `vscode.extensions.onDidChange` live.
+
+### 7.2 Test results
+
+- Switch to `5m` → new session → cache clock `5m`. ✓
+- Switch back to the default → new session → cache clock `60m`. ✓
+- A running session keeps its TTL, even after a switch and a new message. A fork picks up the current value. ✓
+
+### 7.3 Open items
+
+- **The `env` key in Claude Code settings:** could an `env` entry in a project `.claude/settings.json` override the variable that VS Code passes in? If so, the claim in 1.1 does not fully hold. Unverified.
+- **Untested paths:** the hide path (disabling Claude Code), the error path (Claude Code missing), and a VS Code restart.
