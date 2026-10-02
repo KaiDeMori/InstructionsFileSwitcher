@@ -2,6 +2,8 @@
 
 IFS was built for the GitHub Copilot extension, which discovers `.instructions.md` files on its own. Claude Code does not do that — its native context comes from `CLAUDE.md`, memory files, and `@`-imports, and it has no concept of Copilot's `.instructions.md` convention. This page shows a small, honest workaround that lets the *same* IFS checkboxes drive Claude Code too.
 
+Further down, this page also covers the status bar item that switches Claude Code's prompt cache TTL with one click. See [Switching the prompt cache TTL](#switching-the-prompt-cache-ttl).
+
 # The idea in one sentence
 
 A Claude Code `SessionStart` hook reads every **active** `.instructions.md` file and pastes its contents into the chat at the start of a session — and because IFS deactivates a file by renaming it to `.instructions.IFS_DEACTIVATED.md`, the hook's `*.instructions.md` glob naturally skips deactivated files. One checkbox, two tools.
@@ -79,3 +81,29 @@ This is a bridge, not a perfect re-implementation of Copilot's behavior. Know th
 1. Manage your instruction files in the IFS sidebar exactly as you do for Copilot.
 2. Check the files you want Claude Code to see; uncheck the rest (or switch a profile).
 3. Start a fresh Claude Code session (or `/clear` an existing one). The active files are injected automatically.
+
+# Switching the prompt cache TTL
+
+Claude Code caches your prompt so that follow-up requests are faster and cheaper. How long that cache lives is the prompt cache TTL. Claude Code knows exactly two values: `5m` and `1h`.
+
+IFS adds a status bar item at the bottom of the VS Code window that switches the TTL with one click:
+
+- **`Cache: 5m`** → IFS has set the TTL to 5 minutes.
+- **`Cache: *60m`** → IFS has set nothing, so Claude Code uses its default. As of October 2026, that default is 60 minutes with a subscription within your plan usage. The asterisk marks the small print: with usage credits, an API key or a cloud provider, the default is 5 minutes. The tooltip says so too.
+
+The item only appears while the Claude Code extension is installed and enabled. Switching the TTL requires Claude Code 2.1.242 or later.
+
+## How it works
+
+The item writes the environment variable `CLAUDE_CODE_PROMPT_CACHE_TTL` into the Claude Code extension's `claudeCode.environmentVariables` setting, in your User (Global) settings. The Claude Code extension sets these variables each time it starts a session.
+
+- **Switching to `5m`** adds the entry `{ "name": "CLAUDE_CODE_PROMPT_CACHE_TTL", "value": "5m" }`.
+- **Switching back to `*60m`** removes that entry again. IFS deliberately never writes `1h`, so Claude Code's own default stays in charge.
+- **Other entries** in `claudeCode.environmentVariables` are never touched.
+
+## Honest caveats
+
+- **New sessions only.** The variable is read when a session starts, and a running session keeps its TTL. Start a new session, or fork the current one, to pick up the change.
+- **The item shows what IFS set, not the effective TTL.** A control with higher precedence can still override it, for example `FORCE_PROMPT_CACHING_5M=1`. The cache clock in the Claude Code panel and the `Prompt cache (main)` line of `/usage` show the TTL that is really in effect.
+- **VS Code only.** The setting reaches Claude Code inside VS Code, not the CLI in a terminal.
+- **The setting outlives IFS.** If you disable or uninstall IFS while `5m` is set, the entry stays, and Claude Code keeps using `5m`. Switch back to `*60m` first, or remove the entry from your User `settings.json` by hand.

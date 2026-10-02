@@ -29,7 +29,8 @@ function read_user_environment_variable_entries(): environment_variable_entry[] 
 function update_prompt_cache_TTL_status_bar_text(prompt_cache_TTL_status_bar_item: vscode.StatusBarItem): void {
    const prompt_cache_TTL_entry = read_user_environment_variable_entries()
       .find(environment_variable => environment_variable?.name === PROMPT_CACHE_TTL_VARIABLE_NAME);
-   // `*60m` is Claude Code's default within plan usage. The asterisk marks the small print: on usage credits, the default is `5m`.
+   // `*60m` is an assumption, checked on 2026-10-02: Claude Code's default is 60m within plan usage, and 5m with usage credits, an API key or a cloud provider. The asterisk marks that small print.
+   // Anthropic may change these defaults at any time. Source to re-check: https://code.claude.com/docs/en/prompt-caching
    prompt_cache_TTL_status_bar_item.text = `Cache: ${prompt_cache_TTL_entry?.value ?? '*60m'}`;
 }
 

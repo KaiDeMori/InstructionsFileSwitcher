@@ -18,6 +18,7 @@ No more digging through the file explorer. No more “where did that instruction
 - Auto-detects the instruction folders VS Code already knows about (Stable, Insiders, the secret prompts folder, your workspace `.github/instructions`, …)
 - Gives you up to ten independent tree views, so each scope stays in its own lane
 - Remembers named **profiles** so you can flip between *“Writing mode”*, *“Refactoring mode”*, or *“On vacation, please leave a message”* in one click
+- Switches **Claude Code**'s prompt cache TTL with one click from the status bar, if you use Claude Code
 
 ### The trick behind the curtain
 
@@ -165,6 +166,8 @@ IFS isn't really Copilot-specific. It's a switch over files on disk: an active f
 GitHub Copilot discovers `.instructions.md` files on its own. **Claude Code** doesn't — but a small `SessionStart` hook can read every *active* `.instructions.md` file and inject it into the chat at session start. Because deactivated files are renamed away from the `.instructions.md` suffix, the hook's glob skips them automatically, so the same IFS checkbox drives both tools.
 
 See [documentation/claude_code.md](documentation/claude_code.md) for the hook itself, setup steps, the Windows (Git Bash) path note, and the honest caveats — e.g. `applyTo` is ignored, and changes apply on the next session or `/clear`, not live.
+
+IFS also adds a status bar item for Claude Code users: one click switches the prompt cache TTL between `5m` and Claude Code's default. It shows `Cache: 5m` or `Cache: *60m` — the asterisk is the small print, explained in the tooltip. The item only shows up while the Claude Code extension is installed. Details are in [documentation/claude_code.md](documentation/claude_code.md#switching-the-prompt-cache-ttl).
 
 ---
 

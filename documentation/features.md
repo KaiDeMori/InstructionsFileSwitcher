@@ -59,6 +59,10 @@ At the top of each IFS tree view:
 - **Open Config** — jumps to the IFS section in VS Code Settings.
 - **Reset…** — opens a Quick Pick to wipe IFS settings (User path, Workspace paths, profiles, …) with confirmation.
 
+# The status bar
+
+If you use Claude Code, IFS adds a status bar item that switches Claude Code's prompt cache TTL with one click. It shows `Cache: 5m` or `Cache: *60m`; the asterisk marks the small print, which the tooltip explains. The item only appears while the Claude Code extension is installed and enabled. See [claude_code.md](claude_code.md#switching-the-prompt-cache-ttl) for details.
+
 # Auto-detection of instruction folders
 
 On startup, IFS scans known instruction-folder locations for the current operating system and adds them as trees automatically. See [core_idea.md](core_idea.md) for the list. You do not need to configure anything to get started.
