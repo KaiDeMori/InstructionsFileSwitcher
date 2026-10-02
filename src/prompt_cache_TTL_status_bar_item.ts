@@ -3,6 +3,7 @@ import * as constants from './constants';
 import { IFS_notifier } from './notifier';
 
 const TOGGLE_PROMPT_CACHE_TTL_COMMAND = `${constants.EXTENSION_ID}.toggle_prompt_cache_TTL`;
+const CLAUDE_CODE_EXTENSION_ID = 'anthropic.claude-code';
 const CLAUDE_CODE_CONFIG_SECTION = 'claudeCode';
 const ENVIRONMENT_VARIABLES_CONFIG_KEY = 'environmentVariables';
 const PROMPT_CACHE_TTL_VARIABLE_NAME = 'CLAUDE_CODE_PROMPT_CACHE_TTL';
@@ -30,6 +31,17 @@ function update_prompt_cache_TTL_status_bar_text(prompt_cache_TTL_status_bar_ite
       .find(environment_variable => environment_variable?.name === PROMPT_CACHE_TTL_VARIABLE_NAME);
    // `*60m` is Claude Code's default within plan usage. The asterisk marks the small print: on usage credits, the default is `5m`.
    prompt_cache_TTL_status_bar_item.text = `Cache: ${prompt_cache_TTL_entry?.value ?? '*60m'}`;
+}
+
+/**
+ * Shows the item only while Claude Code is installed and enabled. Without Claude Code, a click could only fail.
+ */
+function update_prompt_cache_TTL_status_bar_visibility(prompt_cache_TTL_status_bar_item: vscode.StatusBarItem): void {
+   if (vscode.extensions.getExtension(CLAUDE_CODE_EXTENSION_ID) !== undefined) {
+      prompt_cache_TTL_status_bar_item.show();
+   } else {
+      prompt_cache_TTL_status_bar_item.hide();
+   }
 }
 
 /**
@@ -61,14 +73,15 @@ async function toggle_prompt_cache_TTL(): Promise<void> {
 /**
  * Creates the status bar item that toggles the Claude Code prompt cache TTL between `5m` and default.
  * The item shows what IFS set, not the effective TTL. A change applies to new sessions only.
+ * The item is only visible while Claude Code is installed and enabled.
  * @param {vscode.ExtensionContext} extension_context - Receives all disposables.
  */
 export function create_prompt_cache_TTL_status_bar_item(extension_context: vscode.ExtensionContext): void {
    const prompt_cache_TTL_status_bar_item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
    prompt_cache_TTL_status_bar_item.command = TOGGLE_PROMPT_CACHE_TTL_COMMAND;
-   prompt_cache_TTL_status_bar_item.tooltip = 'Switch the Claude Code prompt cache TTL between 5m and default. Applies to new sessions.';
+   prompt_cache_TTL_status_bar_item.tooltip = 'Switch the Claude Code prompt cache TTL between 5m and default. *60m is the default within plan usage; on usage credits, it is 5m. Applies to new sessions.';
    update_prompt_cache_TTL_status_bar_text(prompt_cache_TTL_status_bar_item);
-   prompt_cache_TTL_status_bar_item.show();
+   update_prompt_cache_TTL_status_bar_visibility(prompt_cache_TTL_status_bar_item);
 
    const toggle_prompt_cache_TTL_command_registration = vscode.commands.registerCommand(
       TOGGLE_PROMPT_CACHE_TTL_COMMAND,
@@ -82,9 +95,15 @@ export function create_prompt_cache_TTL_status_bar_item(extension_context: vscod
       }
    });
 
+   // Fires when extensions are installed, uninstalled, enabled or disabled.
+   const extensions_change_listener = vscode.extensions.onDidChange(() => {
+      update_prompt_cache_TTL_status_bar_visibility(prompt_cache_TTL_status_bar_item);
+   });
+
    extension_context.subscriptions.push(
       prompt_cache_TTL_status_bar_item,
       toggle_prompt_cache_TTL_command_registration,
       environment_variables_change_listener,
+      extensions_change_listener,
    );
 }
