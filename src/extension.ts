@@ -14,6 +14,7 @@ import {
    normalize_path_for_comparison,
 } from './os_platform_helpers';
 import { IFS_notifier } from './notifier';
+import { create_prompt_cache_TTL_status_bar_item } from './prompt_cache_TTL_status_bar_item';
 
 type workspace_tree_title_descriptor = {
    tree_view_instance: instruction_tree_view;
@@ -89,6 +90,7 @@ async function resolve_primary_user_path_for_startup(
 
 export async function activate(context: vscode.ExtensionContext) {
    IFS_notifier.initialize(context);
+   create_prompt_cache_TTL_status_bar_item(context);
 
    const user_tree = new instruction_tree_view(
       {
